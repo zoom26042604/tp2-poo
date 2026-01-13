@@ -1,54 +1,35 @@
-import java.io.FileWriter;
-import java.io.IOException;
 import java.time.LocalDate;
 
 public class FacturationService {
+    private final TaxCalculator taxCalculator;
+    private final FactureDisplayService displayService;
+    private final FacturePersistenceService persistenceService;
+
+    public FacturationService(TaxCalculator taxCalculator,
+                              FactureDisplayService displayService,
+                              FacturePersistenceService persistenceService) {
+        this.taxCalculator = taxCalculator;
+        this.displayService = displayService;
+        this.persistenceService = persistenceService;
+    }
 
     public void creerFacture(double montantHT, String clientName) {
-        double tva = montantHT * 0.2;
-        double total = montantHT + tva;
+        double tva = taxCalculator.calculateTVA(montantHT);
+        double total = taxCalculator.calculateTotal(montantHT, tva);
 
-        // Affichage
-        System.out.println("\n--- FACTURE ---");
-        System.out.println("Date : " + LocalDate.now());
-        System.out.println("Client : " + clientName);
-        System.out.println("Montant HT : " + montantHT);
-        System.out.println("TVA : " + tva);
-        System.out.println("Total TTC : " + total);
+        Facture facture = new Facture(LocalDate.now(), clientName, montantHT, tva, total);
 
-        // Sauvegarde fichier
-        try (FileWriter writer = new FileWriter("factures.txt", true)) {
-            writer.write("FACTURE | " + LocalDate.now()
-                    + " | Client=" + clientName
-                    + " | HT=" + montantHT
-                    + " | TVA=" + tva
-                    + " | TTC=" + total + "\n");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        displayService.displayFacture(facture);
+        persistenceService.saveFacture(facture);
     }
 
     public void creerDevis(double montantHT) {
-        double tva = montantHT * 0.2;
-        double total = montantHT + tva;
+        double tva = taxCalculator.calculateTVA(montantHT);
+        double total = taxCalculator.calculateTotal(montantHT, tva);
 
-        // Affichage
-        System.out.println("\n--- DEVIS ---");
-        System.out.println("Date : " + LocalDate.now());
-        System.out.println("Montant HT : " + montantHT);
-        System.out.println("TVA : " + tva);
-        System.out.println("Total TTC : " + total);
-        System.out.println("Valable 30 jours");
+        Devis devis = new Devis(LocalDate.now(), montantHT, tva, total);
 
-        // Sauvegarde fichier
-        try (FileWriter writer = new FileWriter("devis.txt", true)) {
-            writer.write("DEVIS | " + LocalDate.now()
-                    + " | HT=" + montantHT
-                    + " | TVA=" + tva
-                    + " | TTC=" + total
-                    + " | validite=30j\n");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        displayService.displayDevis(devis);
+        persistenceService.saveDevis(devis);
     }
 }

@@ -5,7 +5,11 @@ public class MainSRP {
     public static void main(String[] args) {
 
         Scanner scanner = new Scanner(System.in);
-        FacturationService service = new FacturationService();
+        FacturationService service = new FacturationService(
+                new TaxCalculator(),
+                new FactureDisplayService(),
+                new FacturePersistenceService()
+        );
 
         boolean quitter = false;
 
